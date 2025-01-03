@@ -13,6 +13,7 @@ class Player:
         self.hand = self.deck.cards
 
         self.bet_bool = False
+        self.pass_bool = False
         self.betsize = 0
 
         self.score = 0
@@ -20,6 +21,8 @@ class Player:
     def play_card(self, card):
         self.hand.remove(card)
         self.stack.append(card)
+
+
 
     def bet(self, betsize):
         self.bet_bool = True
@@ -34,8 +37,9 @@ class Player:
     def win_round(self):
         self.score += 1
 
-    def pass_turn(self):
-        pass
+    def pass_betting(self):
+        self.bet_bool = False
+        self.pass_bool = True
     
     def __repr__(self):
         hand_list = ', '.join([str(card.suit) for card in self.hand])
@@ -45,13 +49,14 @@ class Player:
                 f"Hand: {hand_list}\n"
                 f"Stack: {stack_list}\n"
                 f"Bet Bool: {self.bet_bool}\n"
+                f"Pass Bool: {self.pass_bool}\n"
                 f"Bet Size: {self.betsize}\n"
                 f"Score: {self.score}")
 
     
 
 if __name__ == "__main__":
-    player = Player("Player 1")
+    player = Player(1)
     print(player)
     player.bet(2)
     card = player.hand[0]
