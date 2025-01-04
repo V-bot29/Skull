@@ -1,6 +1,7 @@
 # Player
 
 from Deck import Deck
+import random
 
 class Player:
     def __init__(self, name, symbol = None):
@@ -23,7 +24,6 @@ class Player:
         self.stack.append(card)
 
 
-
     def bet(self, betsize):
         self.bet_bool = True
         self.betsize = betsize
@@ -32,10 +32,16 @@ class Player:
         self.hand += self.stack
         self.stack = []
         self.bet_bool = False
+        self.pass_bool = False
         self.betsize = 0
 
     def win_round(self):
         self.score += 1
+
+    def lose_round(self):
+        # remove a random card
+        card = random.choice(self.hand)
+        self.hand.remove(card)
 
     def pass_betting(self):
         self.bet_bool = False
