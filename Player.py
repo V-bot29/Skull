@@ -4,9 +4,9 @@ from Deck import Deck
 import random
 
 class Player:
-    def __init__(self, name, symbol = None):
+    def __init__(self, name, is_bot = False):
         self.name = name
-        self.symbol = symbol
+        self.is_bot = is_bot
         self.hand = []
         
         self.stack = []
@@ -22,7 +22,6 @@ class Player:
     def play_card(self, card):
         self.hand.remove(card)
         self.stack.append(card)
-
 
     def bet(self, betsize):
         self.bet_bool = True

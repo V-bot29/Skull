@@ -1,14 +1,16 @@
 # Game
-
+import numpy as np
 from Player import Player
+
 
 class Game:
     def __init__(self):
         # TODO implement settings
         print("Game initialized")
         
-    def start_new_game(self, player_amount = 3):
+    def start_new_game(self, player_amount = 3, bot_amount = 0):
         self.player_amount = player_amount
+        self.bot_amount = bot_amount
         self.winner = None
         self.round = 0
         self.players = []
@@ -16,8 +18,13 @@ class Game:
         for i in range(1, self.player_amount + 1):
             self.players.append(Player(i))
 
+        '''
+        for i in range(1, self.bot_amount + 1):
+            self.players.append(Player(i + self.player_amount, is_bot = True))
+        '''
+
         self.player_to_act = self.players[0]  # Who goes first
-        print (f"Starting new game with {self.player_amount} players")
+        print (f"Starting new game with {len(self.players)} players")
         self.game_loop()
 
     def game_loop(self):
@@ -84,6 +91,7 @@ class Game:
     def flip_loop(self):
         print('Flipping cards')
         global round_over
+        global cards_flipped
         # flip own cards
         flowers = 0
         skulls = 0
@@ -107,7 +115,12 @@ class Game:
                 return True
 
         while cards_flipped < self.player_to_act.betsize:
-            action = input("Enter action for {}: ".format(self.player_to_act.name))
+
+            if self.player_to_act.is_bot:
+                action = self.bot_action(self.player_to_act, flip_flag = True)
+            else:
+                action = input("Enter action for {}: ".format(self.player_to_act.name))
+
             try:
                 action_type, player_id, action_value = action.split()
 
@@ -136,7 +149,6 @@ class Game:
 
         return True
 
-
     def turn_loop(self):
         player = self.player_to_act
         print(f"{player.name}'s turn")
@@ -144,8 +156,12 @@ class Game:
         valid_action = False
 
         while not valid_action: 
-            action = input("Enter action for {}: ".format(player.name))
-            valid_action = self.process_action(player, action)
+            if player.is_bot:
+                action_type, action_value = self.bot_action(player)
+                valid_action = self.process_action(player, f"{action_type} {action_value}")
+            else:
+                action = input("Enter action for {}: ".format(player.name))
+                valid_action = self.process_action(player, action)
 
     def process_action(self, player, action):
         global cards_played
@@ -213,7 +229,38 @@ class Game:
         
         return False
 
+    def bot_action(self, player, flip_flag = False):
+        if flip_flag:
+            action_types = {
+                0: "flip"
+            }
+            player_ids = np.arange(1, len(self.players) + 1)
+            player_ids = np.delete(player_ids, player.name - 1)
+            player_id = np.random.choice(player_ids)
+
+            global cards_flipped
+            flip_amount = np.arange(1, self.betsize - cards_flipped)
+            action_value = np.random.choice(flip_amount)
+
+            return action_types[0], player_id, action_value
+        
+        else:
+            action_types = {
+                0: "play",
+                1: "bet",
+                2: "pass"
+            }
+            play_values = {player.hand[i].suit for i in range(len(player.hand))}               
+            bet_values = np.arange(1, len(self.players)*4)
+
+            action_type = np.random.choice(list(action_types.values()))
+            if action_type == "play":
+                action_value = np.random.choice(list(play_values))
+            elif action_type == "bet":
+                action_value = np.random.choice(bet_values)
+            
+            return action_type, action_value
 
 if __name__ == "__main__":
     game = Game()
-    game.start_new_game(2)
+    game.start_new_game(player_amount=0, bot_amount=2)
