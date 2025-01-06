@@ -29,6 +29,8 @@ class Player:
 
     def reset(self):
         self.hand = self.deck.cards.copy()
+        for card in self.hand:  
+            card.flipped = False
         self.stack = []
         self.bet_bool = False
         self.pass_bool = False

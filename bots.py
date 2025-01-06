@@ -3,9 +3,10 @@ from Player import Player
 
 
 class Bot:
-    def __init__(self, player):
-        player = None
-        
+    def __init__(self, player = None, name = "Bot"):
+        self.player = player
+        self.wins = 0
+        self.name = name
 
     def get_moves(self, gamestate):
         moves = {}
@@ -58,7 +59,9 @@ class Bot:
      
         return moves
 
-    def choose_move(self, gamestate):
+    def random_move(self, gamestate):
+        # Decide on a move based on bot thinking
+
         moves = self.get_moves(gamestate)
         #print(moves)
         action_type = np.random.choice(list(moves.keys())) # chose random type
@@ -79,4 +82,4 @@ if __name__ == "__main__":
         "players": [player],
         "highest_bet": 0
     }
-    print(bot.choose_move(gamestate))
+    print(bot.random_move(gamestate))

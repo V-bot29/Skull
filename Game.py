@@ -2,11 +2,14 @@
 from Player import Player
 import bots
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Game:
-    def __init__(self):
-        
+    def __init__(self, player_amount = 0, bot_amount = 3):
+        self.player_amount = player_amount
+        self.bot_amount = bot_amount
+
         self.gamestate = {
             "winner": None,
             "round": 0,
@@ -20,13 +23,18 @@ class Game:
             "flipping_phase": False
         }
 
+        # Initialize bots
         self.game_bots = []
+        for i in range(bot_amount):
+            bot = bots.Bot(name = f"Bot {i+1}")
+            self.game_bots.append(bot)
+
+        
 
         print("Game initialized")
         
-    def start_new_game(self, player_amount = 3, bot_amount = 0):
-        self.player_amount = player_amount
-        self.bot_amount = bot_amount
+    def start_new_game(self):
+
         self.winner = None
         self.round = 0
         self.gamestate["players"] = []
@@ -36,8 +44,10 @@ class Game:
         for j in range(self.player_amount+1, self.player_amount + self.bot_amount + 1):
             new_player = Player(j, is_bot = True)
             self.gamestate["players"].append(new_player)
-            new_bot = bots.Bot(new_player) # bot takes control of player
-            self.game_bots.append(new_bot) 
+
+            # Bot takes control of player
+            self.game_bots[j - self.player_amount - 1].player = new_player
+           
 
 
         self.gamestate["player_to_act"] = self.gamestate["players"][0]  # Who goes first
@@ -57,6 +67,10 @@ class Game:
             # reset players
             for player in self.gamestate["players"]:
                 player.reset()
+
+            if self.gamestate["player_to_act"].deck.cards == []:
+                    self.gamestate["players"].remove(self.gamestate["player_to_act"])
+
 
             game_over = self.check_game_over()
 
@@ -81,7 +95,7 @@ class Game:
             for i in range(first, last):
                 name = i % len(self.gamestate["players"])
                 self.gamestate["player_to_act"] = self.gamestate["players"][name]
-                 
+
                 pass_count = 0
                 for player in self.gamestate["players"]:
                     if player.pass_bool:
@@ -96,6 +110,7 @@ class Game:
                     else:
                         self.gamestate["player_to_act"].lose_round()
                         print(f'{self.gamestate["player_to_act"].name} lost the round')
+
                     round_over = True
                     break
                 else: 
@@ -151,25 +166,20 @@ class Game:
                 for player in self.gamestate["players"]:
                     if (player.name == player_id) and (player != self.gamestate["player_to_act"]):
                         #player.stack.reverse() # take the topmost card
-                        for i in range(int(action_value)):
-                            j = i
-                            while player.stack[j].flipped:
-                                #print(f'{player.stack[j]} card already flipped')
-                                card = player.stack[j]
-                                j += 1                           
+                        cards_this_flip = 0
+                        for card in player.stack:
+                            if not card.flipped and (cards_this_flip < int(action_value)):
+                                cards_this_flip += 1
+                                if card.suit == 'flower':
+                                    flowers += 1
+                                    print(f'{self.gamestate["player_to_act"].name} flipped a flower')
+                                elif card.suit == 'skull':
+                                    skulls += 1
+                                    print(f'{self.gamestate["player_to_act"].name} flipped a skull')
+                                    return False
                                 
-
-                            card.flipped = True
-
-                            if card.suit == 'flower':
-                                flowers += 1
-                                print(f'{self.gamestate["player_to_act"].name} flipped a flower')
-                            elif card.suit == 'skull':
-                                skulls += 1
-                                print(f'{self.gamestate["player_to_act"].name} flipped a skull')
-                                return False
-
-                            self.gamestate["cards_flipped"] += 1
+                                card.flipped = True
+                                self.gamestate["cards_flipped"] += 1
 
         return True
 
@@ -241,17 +251,38 @@ class Game:
             for player in self.gamestate["players"]:
                 if player.hand != []:
                     self.winner = player
-                    print (f"Player {player.name} wins the game")
+                    print(f"Player {player.name} wins the game")
             return True
-               
+
+        if self.gamestate["players"] == []:
+            print("Draw")
+            self.winner = None
+            return True   
+            
         return False
     
-
-    def bot_action(self):       
-        action_type, action_value = self.game_bots[0].random_move(self.gamestate)
+    def bot_action(self):  
+        # decide on bot to call
+        for bot in self.game_bots:
+            if bot.player == self.gamestate["player_to_act"]:
+                action_type, action_value = bot.random_move(self.gamestate)
+                                            # TODO change this to actual move
         return action_type, action_value
 
 
 if __name__ == "__main__":
-    game = Game()
-    game.start_new_game(player_amount=1, bot_amount=2)
+    game = Game(player_amount=1, bot_amount=3)
+    
+    #game.start_new_game()
+
+    n_games = 1000 
+
+    for i in range(n_games):
+        winner = game.start_new_game()
+        for bot in game.game_bots:
+            if bot.player == winner:
+                bot.wins += 1
+                break
+
+    plt.bar([bot.name for bot in game.game_bots], [bot.wins/n_games for bot in game.game_bots])
+    plt.show()
