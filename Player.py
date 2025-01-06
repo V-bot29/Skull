@@ -28,7 +28,7 @@ class Player:
         self.betsize = betsize
 
     def reset(self):
-        self.hand += self.stack
+        self.hand = self.deck.cards
         self.stack = []
         self.bet_bool = False
         self.pass_bool = False
@@ -39,8 +39,8 @@ class Player:
 
     def lose_round(self):
         # remove a random card
-        card = random.choice(self.hand)
-        self.hand.remove(card)
+        card = random.choice(self.deck.cards)
+        self.deck.cards.remove(card)
 
     def pass_betting(self):
         self.bet_bool = False
