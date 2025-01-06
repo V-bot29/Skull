@@ -11,7 +11,7 @@ class Player:
         
         self.stack = []
         self.deck = Deck()
-        self.hand = self.deck.cards
+        self.hand = self.deck.cards.copy()
 
         self.bet_bool = False
         self.pass_bool = False
@@ -28,7 +28,7 @@ class Player:
         self.betsize = betsize
 
     def reset(self):
-        self.hand = self.deck.cards
+        self.hand = self.deck.cards.copy()
         self.stack = []
         self.bet_bool = False
         self.pass_bool = False
@@ -51,6 +51,7 @@ class Player:
         stack_list = ', '.join([str(card.suit) for card in self.stack])
 
         return (f"Name: {self.name}\n"
+                f"Deck: {self.deck}\n"
                 f"Hand: {hand_list}\n"
                 f"Stack: {stack_list}\n"
                 f"Bet Bool: {self.bet_bool}\n"
@@ -63,8 +64,9 @@ class Player:
 if __name__ == "__main__":
     player = Player(1)
     print(player)
-    player.bet(2)
-    card = player.hand[0]
-    player.win_round()
-    player.play_card(card)
-    print(player)
+    player.lose_round()
+    print("lost_card",player)
+    player.reset()
+    print("reset" ,player)
+    player.play_card(player.hand[0])
+    print("played_card ",player)

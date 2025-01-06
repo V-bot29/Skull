@@ -20,3 +20,9 @@ class Deck:
     def __repr__(self):
         return str(self.cards)
             
+if __name__ == "__main__":
+    deck = Deck()
+    print(deck.cards)
+
+    deck.cards.remove(deck.cards[1])
+    print(deck.cards)
