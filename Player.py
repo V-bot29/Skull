@@ -27,6 +27,18 @@ class Player:
         self.bet_bool = True
         self.betsize = betsize
 
+
+    def total_reset(self):
+        self.deck = Deck()
+        self.hand = self.deck.cards.copy()
+        for card in self.hand:  
+            card.flipped = False
+        self.stack = []
+        self.bet_bool = False
+        self.pass_bool = False
+        self.betsize = 0
+        self.score = 0
+
     def reset(self):
         self.hand = self.deck.cards.copy()
         for card in self.hand:  
