@@ -36,7 +36,7 @@ class Bot:
                 "other_stack": -1,
                 "other_hand": -1,
                 "other_bet_ratio": 1,
-                "other_wins": -10
+                "other_wins": -100
             }
             weights["others"][name] = weights_other
         
@@ -52,7 +52,7 @@ class Bot:
         # general gamestate variables
         evaluation += gamestate["cards_played"] * weights["num_cards_played"]
 
-        highest_bet_ratio = gamestate["highest_bet"] / gamestate["cards_played"]
+        highest_bet_ratio = gamestate["highest_bet"] / (gamestate["cards_played"] + 1)
         evaluation += highest_bet_ratio * weights["highest_bet_ratio"]
 
         distance = (int(self.player.name) - int(gamestate["player_to_act"].name)) % len(gamestate["players"])
@@ -62,7 +62,7 @@ class Bot:
         evaluation += len(self.player.hand) * weights["own_hand"]
         evaluation += len(self.player.stack) * weights["own_stack"]
         evaluation += self.player.score * weights["own_wins"]
-        own_bet_ratio = self.player.betsize / gamestate["cards_played"]
+        own_bet_ratio = self.player.betsize / (gamestate["cards_played"] + 1)
         evaluation += own_bet_ratio * weights["own_bet_ratio"]
 
         if self.player.score == 2:
@@ -76,7 +76,7 @@ class Bot:
             evaluation += len(player.stack) * weights["others"][name]["other_stack"]
             evaluation += len(player.hand) * weights["others"][name]["other_hand"]
             evaluation += player.score * weights["others"][name]["other_wins"]
-            other_bet_ratio = player.betsize / gamestate["cards_played"]
+            other_bet_ratio = player.betsize / (gamestate["cards_played"] + 1)
             evaluation += other_bet_ratio * weights["others"][name]["other_bet_ratio"]
 
             if player.score == 2:
@@ -84,50 +84,39 @@ class Bot:
 
         return evaluation 
 
-    def get_move(self, gamestate):
-        simgame = SimGame(gamestate) 
-        best_move, eval = self.minmax(simgame, self.search_depth)
-        print(f"final eval: {eval}")
-        return best_move 
-
-    def minmax(self, simgame, max_depth, depth = 0):
-        if depth == max_depth or simgame.is_terminal():
+    def tree_search(self, simgame, max_depth, depth = 0):
+        if depth == max_depth*len(simgame.gamestate["players"]) or simgame.is_terminal():
             eval = self.evaluate_gamestate(simgame.gamestate)
-            return eval
+            return None, eval
+        
+        current_player = simgame.gamestate["player_to_act"]
+        maximizer = (current_player.name == self.player.name)
 
-        if simgame.gamestate["player_to_act"].name == self.player.name:
-            maximizing_player = True
-        else:
-            maximizing_player = False
+        best_move = None
+        best_value = -np.inf if maximizer else np.inf
 
-        if maximizing_player:
-            max_eval = -np.inf
-            best_move = None
-            moves = simgame.get_moves()
-            for move in moves:
-                simgame.do_move(move)
-                eval = self.minmax(simgame, max_depth, depth + 1)
-                simgame.undo_move()
-                if eval > max_eval:
-                    print(f"new max eval: {eval} for move: {move}")
-                    max_eval = eval
+        moves = simgame.get_moves()
+        if best_move is None:
+            best_move = self.random_move(moves)
+
+        for move in moves:
+            simgame.do_move(move)    
+            _, eval = self.tree_search(simgame, max_depth, depth + 1)
+            simgame.undo_move()
+
+            if maximizer:
+                if eval > best_value:
+                    best_value = eval
                     best_move = move
-            if depth == 0:
-                print(f"best move: {best_move}")
-                print(f"max eval: {max_eval}")
-                return best_move, max_eval
-            return max_eval
-        else:
-            min_eval = np.inf
-            moves = simgame.get_moves()
-            for move in moves:
-                simgame.do_move(move)
-                eval = self.minmax(simgame, max_depth, depth + 1)
-                simgame.undo_move()
-                if eval < min_eval:
-                    min_eval = eval
-            return min_eval
+            else:
+                if eval < best_value:
+                    best_value = eval
+                    best_move = move
+            
+    
+        return best_move, best_value
 
+        
 class RandomBot(Bot):
     def __init__(self, player=None, name="RandomBot"):
         super().__init__(player, name)
@@ -137,6 +126,18 @@ class RandomBot(Bot):
         moves = simgame.get_moves()
         
         return self.random_move(moves)
+
+
+class TreeSearchBot(Bot):
+    def __init__(self, player=None, name="TreeSearchBot"):
+        super().__init__(player, name)
+
+    def get_move(self, gamestate):
+        simgame = SimGame(gamestate)
+        best_move, eval = self.tree_search(simgame, self.search_depth)
+        print(f"{self.name}'s eval = {eval}")
+        return best_move
+
 
 class GeneticBot(Bot):
     def __init__(self, player=None, name="ManualBot"):
@@ -169,14 +170,14 @@ if __name__ == "__main__":
     print(f"Random Bot move: {move}")
     """
 
-    minmax_bot = Bot(player2)
-    move = minmax_bot.get_move(gamestate)
+    tree_bot = TreeSearchBot(player1)
+    move = tree_bot.get_move(gamestate)
     print(f"Minmax Bot move: {move}")
 
     '''
     # EXAMPLES
     moves_play = [('play', 'skull'), ('play', 'flower'), ('play', 'flower'), ('play', 'flower')]
-    moves_bet = [('bet', 2), ('bet', 3), ('bet', 4), ('pass', None)]
+    moves_bet = [('bet', 2), ('bet', 3), ('bet', 4), ('pass', 0)]
     moves_flip = [('flip 2', 1), ('flip 2', 2)]
     print(bot.random_move(moves_play))
     '''
