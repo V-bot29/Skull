@@ -6,15 +6,16 @@ if __name__ == "__main__":
 
     
     # Initialize bots
-    bot1 = bots.RandomBot(name = "RandomBot")
-    bot2 = bots.TreeSearchBot(name = "TreeSearchBot")
+    bot1 = bots.RandomBot(name = "RandomBot1")
+    bot2 = bots.RandomBot(name = "RandomBot2")
+    bot3 = bots.TreeSearchBot(name = "TreeSearchBot", search_depth=1)
     #bot2 = bots.RandomBot(name = "RandomBot")
-    game_bots = [bot1, bot2]
+    game_bots = [bot1, bot2, bot3]
 
     game = Game.Game(player_amount=0, game_bots = game_bots)
 
 
-    n = 10
+    n = 100
 
 
     for i in range(n):

@@ -303,8 +303,13 @@ class Game:
                     continue
                 if p.name == player.name:
                     continue
+                
+                unflipped_in_stack = 0
+                for card in p.stack:
+                    if not card.flipped:
+                        unflipped_in_stack += 1
 
-                flip_values = np.arange(1, len(p.stack) + 1)  # check here for flip issues
+                flip_values = np.arange(1, unflipped_in_stack + 1)  # check here for flip issues
                 for value in flip_values:
                     moves.append((f'flip {p.name}', value))
 
@@ -377,8 +382,6 @@ class SimGame(Game):
                             self.gamestate["flip_win"] = False
                             break
                     
-                            
-
 
                     # flip other players cards
                     if self.gamestate["cards_flipped"] < self.gamestate["player_to_act"].betsize:
@@ -404,16 +407,6 @@ class SimGame(Game):
                                             
                                             card.flipped = True
                                             self.gamestate["cards_flipped"] += 1
-
-                    if self.gamestate["flowers_flipped"] == self.gamestate["player_to_act"].betsize:
-                            self.gamestate["flip_win"] = True
-
-                    if self.gamestate["flip_win"] == True:
-                        self.gamestate["player_to_act"].win_round()
-                        self.gamestate["round_over"] = True
-                    elif self.gamestate["flip_win"] == False:
-                        self.gamestate["player_to_act"].lose_round()
-                        self.gamestate["round_over"] = True
                     
                 else: 
                     # TURN LOOP
@@ -453,7 +446,16 @@ class SimGame(Game):
                                 self.gamestate["highest_bet"] = betsize
                               
 
+                # check if player won the round
+                if self.gamestate["flowers_flipped"] == self.gamestate["player_to_act"].betsize:
+                        self.gamestate["flip_win"] = True
 
+                if self.gamestate["flip_win"] == True:
+                    self.gamestate["player_to_act"].win_round()
+                    self.gamestate["round_over"] = True
+                elif self.gamestate["flip_win"] == False:
+                    self.gamestate["player_to_act"].lose_round()
+                    self.gamestate["round_over"] = True
 
             if self.gamestate["round_over"]:
                 

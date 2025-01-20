@@ -5,11 +5,11 @@ import numpy as np
 from Game import SimGame
 
 class Bot:
-    def __init__(self, player = None, name = "Bot", search_depth = 2):
+    def __init__(self, player = None, name = "Bot"):
         self.player = player
         self.wins = 0
         self.name = name
-        self.search_depth = search_depth
+        
 
    
 
@@ -89,13 +89,12 @@ class Bot:
             eval = self.evaluate_gamestate(simgame.gamestate)
             return None, eval
         
-        current_player = simgame.gamestate["player_to_act"]
-        maximizer = (current_player.name == self.player.name)
+        maximizer = (simgame.gamestate["player_to_act"] == self.player.name)
 
         best_move = None
         best_value = -np.inf if maximizer else np.inf
 
-        moves = simgame.get_moves()
+        moves = simgame.get_moves() # TODO bug when moves = ["(flip 1, 1)" , "(flip 2, 1)"] 
         if best_move is None:
             best_move = self.random_move(moves)
 
@@ -129,8 +128,9 @@ class RandomBot(Bot):
 
 
 class TreeSearchBot(Bot):
-    def __init__(self, player=None, name="TreeSearchBot"):
+    def __init__(self, player=None, name="TreeSearchBot", search_depth=2):
         super().__init__(player, name)
+        self.search_depth = search_depth
 
     def get_move(self, gamestate):
         simgame = SimGame(gamestate)
